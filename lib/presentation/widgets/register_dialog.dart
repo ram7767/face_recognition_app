@@ -207,11 +207,11 @@ class _RegisterDialogState extends State<RegisterDialog> {
 
       if (context.mounted) {
         Navigator.pop(context);
-        showDialog(
-          context: context,
-          builder: (context) => ResultDialog(
-            user: provider.registeredUser,
-            isVerification: false,
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                VerificationResultScreen(result: provider.verificationResult!),
           ),
         );
       }

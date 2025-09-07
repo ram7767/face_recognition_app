@@ -1,104 +1,123 @@
+// lib/presentation/screens/verification_result_screen.dart
+
 import 'package:flutter/material.dart';
-import '../../domain/entities/user.dart';
+import 'dart:convert';
 import '../../domain/entities/verification_result.dart';
 
-class ResultDialog extends StatelessWidget {
-  final User? user;
-  final VerificationResult? result;
-  final bool isVerification;
+class VerificationResultScreen extends StatelessWidget {
+  final VerificationResult result;
 
-  const ResultDialog({
-    super.key,
-    this.user,
-    this.result,
-    required this.isVerification,
-  });
+  const VerificationResultScreen({super.key, required this.result});
 
   @override
   Widget build(BuildContext context) {
-    if (isVerification) {
-      return _buildVerificationResult(context);
-    } else {
-      return _buildRegistrationResult(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          result.verified ? 'Verification Successful' : 'Verification Failed',
+        ),
+        backgroundColor: result.verified ? Colors.green : Colors.red,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(result.message, style: const TextStyle(fontSize: 16)),
+            if (result.verified && result.user != null) ...[
+              const SizedBox(height: 24),
+              const Text(
+                'User Details:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Name: ${result.user!.name}'),
+                      const SizedBox(height: 8),
+                      Text('Email: ${result.user!.email}'),
+                      const SizedBox(height: 8),
+                      Text('Phone: ${result.user!.phone}'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            if (result.imageWithBoxes != null) ...[
+              const SizedBox(height: 24),
+              const Text(
+                'Verification Image:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              _buildImage(result.imageWithBoxes!),
+            ],
+            const SizedBox(height: 32),
+            Center(
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImage(String imageData) {
+    try {
+      // Handle base64 encoded images
+      if (imageData.startsWith('data:image')) {
+        final base64String = imageData.split(',').last;
+        final bytes = base64.decode(base64String);
+        return Container(
+          width: double.infinity,
+          height: 300,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Image.memory(bytes, fit: BoxFit.contain),
+        );
+      }
+      // Handle network images
+      else if (imageData.startsWith('http')) {
+        return Container(
+          width: double.infinity,
+          height: 300,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Image.network(
+            imageData,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(child: Text('Failed to load image'));
+            },
+          ),
+        );
+      }
+      // Handle raw base64 without prefix
+      else {
+        final bytes = base64.decode(imageData);
+        return Container(
+          width: double.infinity,
+          height: 300,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Image.memory(bytes, fit: BoxFit.contain),
+        );
+      }
+    } catch (e) {
+      return const Text('Invalid image data');
     }
-  }
-
-  Widget _buildVerificationResult(BuildContext context) {
-    final isVerified = result?.verified ?? false;
-    final verifiedUser = result?.user;
-    final message = result?.message ?? 'Unknown error';
-
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            isVerified ? Icons.check_circle : Icons.cancel,
-            color: isVerified ? Colors.green : Colors.red,
-          ),
-          const SizedBox(width: 8),
-          Text(isVerified ? 'Verified!' : 'Not Verified'),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(message),
-          if (isVerified && verifiedUser != null) ...[
-            const SizedBox(height: 16),
-            const Text('User Details:', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('Name: ${verifiedUser.name}'),
-            Text('Email: ${verifiedUser.email}'),
-            Text('Phone: ${verifiedUser.phone}'),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRegistrationResult(BuildContext context) {
-    final isSuccess = user != null;
-
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            isSuccess ? Icons.check_circle : Icons.error,
-            color: isSuccess ? Colors.green : Colors.red,
-          ),
-          const SizedBox(width: 8),
-          Text(isSuccess ? 'Registration Successful!' : 'Registration Failed'),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(isSuccess ? 'User has been registered successfully!' : 'Failed to register user'),
-          if (isSuccess && user != null) ...[
-            const SizedBox(height: 16),
-            const Text('User Details:', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('ID: ${user!.id}'),
-            Text('Name: ${user!.name}'),
-            Text('Email: ${user!.email}'),
-            Text('Phone: ${user!.phone}'),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
-        ),
-      ],
-    );
   }
 }

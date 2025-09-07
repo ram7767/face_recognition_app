@@ -6,6 +6,7 @@ class VerificationResultModel extends VerificationResult {
     required super.verified,
     super.user,
     required super.message,
+    super.imageWithBoxes,
   });
 
   factory VerificationResultModel.fromJson(Map<String, dynamic> json) {
@@ -13,6 +14,7 @@ class VerificationResultModel extends VerificationResult {
       verified: json['verified'],
       user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
       message: json['message'],
+      imageWithBoxes: json['imageWithBoxes'],
     );
   }
 }

@@ -130,11 +130,11 @@ class HomePage extends StatelessWidget {
       await provider.verifyUser(image);
 
       if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => ResultDialog(
-            result: provider.verificationResult,
-            isVerification: true,
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                VerificationResultScreen(result: provider.verificationResult!),
           ),
         );
       }
